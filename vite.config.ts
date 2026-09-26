@@ -6,7 +6,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig(() => {
   return {
-    base: '/Mo5a-Master-Projects/',
+    base: '/',
     plugins: [
       react(),
       tailwindcss(),
