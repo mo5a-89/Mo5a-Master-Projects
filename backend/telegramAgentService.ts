@@ -2,7 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { GoogleGenAI, Type } from '@google/genai';
-import { executeServerTelegramDocumentPipeline } from './telegramPipelineService';
+import {
+  executeServerTelegramDocumentPipeline,
+  executeEnterpriseTelegramOrchestrator,
+} from './telegramPipelineService';
 
 const DATA_DIR = path.join(process.cwd(), '.data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
@@ -639,36 +642,18 @@ export async function handleIncomingTelegramUpdate(update: any, config: Telegram
   const fromName = `${message.from?.first_name || ''} ${message.from?.last_name || ''}`.trim() || 'مستخدم تليجرام';
   const text = message.text || message.caption || '';
 
-  // 1. Handle Document & Photo Uploads via Server-Side Autonomous Pipeline
-  if (message.document || (message.photo && Array.isArray(message.photo) && message.photo.length > 0)) {
-    const pipelineResult = await executeServerTelegramDocumentPipeline({
-      message,
-      botToken: config.botToken,
-    });
-    if (pipelineResult.handled) {
-      return;
-    }
-  }
+  // 1. Process via Master Autonomous Multi-Agent Orchestrator
+  // (Handles compound intents, stateless document isolation, visual classification, EVM, 3-way matching, and anti-timeout)
+  const orchestratorResult = await executeEnterpriseTelegramOrchestrator({
+    message,
+    botToken: config.botToken,
+  });
 
-  // 2. Handle Voice / Audio Notes
-  if (message.voice || message.audio) {
-    await sendTelegramMessage(
-      config.botToken,
-      chatId,
-      `🎙️ *تم استلام رسالتك الصوتية يا ${fromName}!*\nجاري تفريغ الصوت وتحليله عبر وكيل الذكاء الاصطناعي...`
-    );
-
-    const result = await processAutonomousAgentCommand({
-      command: 'تسجيل تقرير تقدم أعمال ميداني ومطابقة كميات الموقع وسند الاستلام',
-      agentType: 'site_ops',
-      userContext: { name: fromName, chatId: String(chatId) },
-    });
-
-    await sendTelegramMessage(config.botToken, chatId, result.telegramMarkdown);
+  if (orchestratorResult.handled) {
     return;
   }
 
-  // 4. Handle Standard Commands
+  // 2. Fallback to Standard Commands if not handled
   if (text === '/start' || text.startsWith('/start')) {
     const welcome = `👑 *مرحباً بك في البوابة الذكية لمنظومة مؤسسة صناع الموارد التجارية (RMT)!*
 أنا مساعدك الذكي ومسؤول العمليات التنفيذي المستقل المتصل بالمنظومة السحابية لحظياً.
