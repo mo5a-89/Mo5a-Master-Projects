@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { GoogleGenAI, Type } from '@google/genai';
+import { executeServerTelegramDocumentPipeline } from './telegramPipelineService';
 
 const DATA_DIR = path.join(process.cwd(), '.data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
@@ -638,202 +639,18 @@ export async function handleIncomingTelegramUpdate(update: any, config: Telegram
   const fromName = `${message.from?.first_name || ''} ${message.from?.last_name || ''}`.trim() || 'مستخدم تليجرام';
   const text = message.text || message.caption || '';
 
-  // 1. Handle Document Uploads (PDF, Excel, Word, CSV)
-  if (message.document) {
-    const doc = message.document;
-    const fileId = doc.file_id;
-    const fileName = doc.file_name || `telegram_doc_${Date.now()}.pdf`;
-    const mimeType = doc.mime_type || 'application/pdf';
-
-    await sendTelegramMessage(
-      config.botToken,
-      chatId,
-      `📥 *تم استلام الملف:* \`${fileName}\`\n⏳ جاري تحميل الملف، التدقيق الهندسي، والرفع على الأرشيف السحابي Google Drive...`
-    );
-
-    try {
-      // Get file URL from Telegram
-      const metaRes = await fetch(`https://api.telegram.org/bot${config.botToken}/getFile?file_id=${fileId}`);
-      const metaJson = await metaRes.json();
-
-      if (metaJson.ok && metaJson.result?.file_path) {
-        const downloadUrl = `https://api.telegram.org/file/bot${config.botToken}/${metaJson.result.file_path}`;
-        const fileRes = await fetch(downloadUrl);
-        const arrayBuf = await fileRes.arrayBuffer();
-        const fileBuf = Buffer.from(arrayBuf);
-        const base64Data = fileBuf.toString('base64');
-
-        // Analyze and transform with Gemini Multimodal AI
-        const ai = getGenAI();
-        if (ai) {
-          const systemInstruction = `You are the Lead Multimodal Engineer for "مؤسسة صناع الموارد التجارية" (RMT).
-Extract and transform the uploaded document into an exact enterprise deliverable:
-- 15% KSA VAT calculations
-- Complete line items array with itemNo, description, quantity, unit, unitPrice, totalPrice
-- UL/FM or HCIS standards matching
-- Output valid JSON strictly adhering to schema.`;
-
-          const contents: any[] = [];
-          if (mimeType.startsWith('image/') || mimeType === 'application/pdf' || mimeType.startsWith('text/')) {
-            contents.push({
-              inlineData: {
-                mimeType,
-                data: base64Data,
-              },
-            });
-          }
-          contents.push({
-            text: `Uploaded File: "${fileName}"
-User Caption/Instruction: "${text || 'Extract all items, calculate 15% VAT, and generate quotation or invoice package'}"
-Caller: ${fromName}`,
-          });
-
-          const aiRes = await ai.models.generateContent({
-            model: 'gemini-3.8-flash',
-            contents: { parts: contents },
-            config: {
-              systemInstruction,
-              responseMimeType: 'application/json',
-              responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                  deliverableType: {
-                    type: Type.STRING,
-                    enum: ['quotation', 'invoice', 'purchase_order', 'delivery_note', 'financial_report', 'boq_analysis'],
-                  },
-                  title: { type: Type.STRING },
-                  documentNumber: { type: Type.STRING },
-                  clientOrSupplierName: { type: Type.STRING },
-                  projectName: { type: Type.STRING },
-                  subtotal: { type: Type.NUMBER },
-                  vatAmount: { type: Type.NUMBER },
-                  grandTotal: { type: Type.NUMBER },
-                  items: {
-                    type: Type.ARRAY,
-                    items: {
-                      type: Type.OBJECT,
-                      properties: {
-                        itemNo: { type: Type.INTEGER },
-                        description: { type: Type.STRING },
-                        quantity: { type: Type.NUMBER },
-                        unit: { type: Type.STRING },
-                        unitPrice: { type: Type.NUMBER },
-                        totalPrice: { type: Type.NUMBER },
-                      },
-                      required: ['description', 'quantity', 'unitPrice'],
-                    },
-                  },
-                  summaryArabic: { type: Type.STRING },
-                },
-                required: ['deliverableType', 'title', 'subtotal', 'grandTotal', 'items', 'summaryArabic'],
-              },
-            },
-          });
-
-          const parsed = JSON.parse(aiRes.text || '{}');
-          const docNum = parsed.documentNumber || `RM0${Math.floor(100000 + Math.random() * 900000)}`;
-
-          // Save to Live Database
-          const dbData = loadDatabase() || {};
-          if (parsed.deliverableType === 'invoice') {
-            if (!Array.isArray(dbData.invoices)) dbData.invoices = [];
-            dbData.invoices.unshift({
-              id: `inv-${Date.now()}`,
-              invoiceNumber: docNum,
-              invoiceDate: new Date().toISOString().split('T')[0],
-              projectName: parsed.projectName || 'مشروع هندسي متكامل',
-              customerName: parsed.clientOrSupplierName || 'العميل المعتمد',
-              subtotal: parsed.subtotal,
-              vatAmount: parsed.vatAmount || parsed.subtotal * 0.15,
-              grandTotal: parsed.grandTotal,
-              status: 'issued',
-              items: parsed.items,
-              createdAt: new Date().toISOString(),
-            });
-            saveDatabase(dbData, `Telegram File Transform -> Invoice #${docNum}`);
-          } else {
-            if (!Array.isArray(dbData.customerQuotations)) dbData.customerQuotations = [];
-            dbData.customerQuotations.unshift({
-              id: `quote-${Date.now()}`,
-              quotationNumber: docNum,
-              version: 1,
-              date: new Date().toISOString().split('T')[0],
-              clientName: parsed.clientOrSupplierName || 'العميل المستهدف',
-              projectName: parsed.projectName || 'مشروع توريد وتنفيذ',
-              items: (parsed.items || []).map((it: any, idx: number) => ({
-                id: `it-${Date.now()}-${idx}`,
-                itemNo: idx + 1,
-                description: it.description,
-                quantity: it.quantity,
-                unit: it.unit || 'حبة',
-                sellingUnitPrice: it.unitPrice,
-                sellingTotalPrice: it.totalPrice || (it.unitPrice * it.quantity),
-                supplierUnitPrice: it.unitPrice * 0.75,
-                supplierTotalPrice: (it.unitPrice * 0.75) * it.quantity,
-                system: 'fire_fighting',
-              })),
-              totals: {
-                customerSellingPrice: parsed.subtotal,
-                vatAmount: parsed.vatAmount || parsed.subtotal * 0.15,
-                grandTotalWithVat: parsed.grandTotal,
-                grossProfit: parsed.subtotal * 0.25,
-                grossMarginPercent: 25,
-              },
-              status: 'Draft',
-              createdAt: new Date().toISOString(),
-            });
-            saveDatabase(dbData, `Telegram File Transform -> Quote #${docNum}`);
-          }
-
-          const replyDoc = `📄 *تم استخراج واعتماد المستند بنجاح!*
-• *العنوان:* ${parsed.title || 'عرض سعر رسمي'}
-• *الرقم المرجعي:* \`${docNum}\`
-• *الجهة:* ${parsed.clientOrSupplierName || 'العميل المعتمد'}
-• *المبلغ قبل الضريبة:* ${(parsed.subtotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} ر.س
-• *ضريبة 15% VAT:* ${(parsed.vatAmount || (parsed.subtotal * 0.15) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} ر.س
-• *الإجمالي شامل الضريبة:* ${(parsed.grandTotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} ر.س
-• *عدد البنود المستخرجة:* ${(parsed.items || []).length} بند
-
-📝 *الملخص:* ${parsed.summaryArabic}
-☁️ *الأرشيف السحابي:* تم النسخ والربط مع Google Drive و Firebase بنجاح.`;
-
-          const replyButtons = [
-            [
-              { text: '👁️ معاينة وطباعة بالمنظومة', url: `${config.webhookUrl || 'https://rmt-master.web.app'}/?tab=${parsed.deliverableType === 'invoice' ? 'invoices' : 'quotations'}` },
-              { text: '📁 الأرشيف السحابي Google Drive', url: 'https://drive.google.com' },
-            ],
-          ];
-
-          await sendTelegramMessage(config.botToken, chatId, replyDoc, { inline_keyboard: replyButtons });
-          return;
-        }
-      }
-    } catch (err: any) {
-      await sendTelegramMessage(config.botToken, chatId, `⚠️ تعذر استخراج الملف آلياً: ${err.message || 'خطأ غير معروف'}`);
+  // 1. Handle Document & Photo Uploads via Server-Side Autonomous Pipeline
+  if (message.document || (message.photo && Array.isArray(message.photo) && message.photo.length > 0)) {
+    const pipelineResult = await executeServerTelegramDocumentPipeline({
+      message,
+      botToken: config.botToken,
+    });
+    if (pipelineResult.handled) {
       return;
     }
   }
 
-  // 2. Handle Photo Uploads (Scanned Delivery Notes, Receipts, Business Cards)
-  if (message.photo && Array.isArray(message.photo) && message.photo.length > 0) {
-    const photo = message.photo[message.photo.length - 1]; // Highest resolution
-    await sendTelegramMessage(
-      config.botToken,
-      chatId,
-      `📸 *تم استلام الصورة الميدانية!*\nجاري قراءة البيانات عبر البصريات الذكية (OCR) ومطابقة سند الاستلام وسجلات الموقع...`
-    );
-
-    const result = await processAutonomousAgentCommand({
-      command: text || 'قراءة وتدقيق بيانات الصورة المرفقة واستخراج سند تسليم أو استلام للموقع',
-      agentType: 'site_ops',
-      userContext: { name: fromName, chatId: String(chatId) },
-    });
-
-    await sendTelegramMessage(config.botToken, chatId, result.telegramMarkdown);
-    return;
-  }
-
-  // 3. Handle Voice / Audio Notes
+  // 2. Handle Voice / Audio Notes
   if (message.voice || message.audio) {
     await sendTelegramMessage(
       config.botToken,

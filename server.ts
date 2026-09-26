@@ -14,6 +14,7 @@ import {
   stopTelegramPolling,
   handleIncomingTelegramUpdate,
 } from './backend/telegramAgentService';
+import { executeServerTelegramDocumentPipeline } from './backend/telegramPipelineService';
 
 dotenv.config();
 
@@ -2024,15 +2025,39 @@ app.post('/api/telegram/webhook', async (req, res) => {
     const config = loadTelegramConfig();
     const update = req.body;
     if (update && config.botToken) {
-      // Process in background without holding HTTP connection
-      handleIncomingTelegramUpdate(update, config).catch((err) => {
-        console.error('Webhook async handling error:', err);
-      });
+      const msg = update.message || update.edited_message;
+      if (msg && (msg.document || (msg.photo && Array.isArray(msg.photo) && msg.photo.length > 0))) {
+        executeServerTelegramDocumentPipeline({ message: msg, botToken: config.botToken }).catch((err) => {
+          console.error('Webhook pipeline async error:', err);
+        });
+      } else {
+        handleIncomingTelegramUpdate(update, config).catch((err) => {
+          console.error('Webhook async handling error:', err);
+        });
+      }
     }
     return res.status(200).send('OK');
   } catch (err: any) {
     console.error('Telegram webhook error:', err);
     return res.status(200).send('OK');
+  }
+});
+
+// 3.1 Direct Server-Side Document Parsing & Pricing Pipeline Endpoint
+app.post('/api/telegram/parse-document', async (req, res) => {
+  try {
+    const config = loadTelegramConfig();
+    if (!config.botToken) {
+      return res.status(400).json({ success: false, error: 'Telegram bot token is not configured.' });
+    }
+    const { message } = req.body;
+    const result = await executeServerTelegramDocumentPipeline({
+      message,
+      botToken: config.botToken,
+    });
+    return res.json(result);
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -2413,3 +2438,5 @@ async function startServer() {
 }
 
 startServer();
+
+export { executeServerTelegramDocumentPipeline };
