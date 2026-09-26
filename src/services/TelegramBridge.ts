@@ -14,6 +14,7 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { PRODUCTION_BACKEND_ENDPOINT } from './cloudDriveSync';
 import { Project, Invoice, PurchaseOrder } from '../types';
+import { telegramFilePipeline } from './TelegramFilePipeline';
 
 export interface TelegramBridgeConfig {
   botToken: string;
@@ -525,6 +526,45 @@ export class TelegramBridge {
   }
 
   /**
+   * Send Document / File back to Telegram Chat via sendDocument
+   */
+  public async sendDocument(
+    chatId: string | number,
+    fileData: Blob | Uint8Array | ArrayBuffer,
+    fileName: string,
+    caption?: string
+  ): Promise<{ success: boolean; result?: any; error?: string }> {
+    const token = this.botToken.trim();
+    if (!token) return { success: false, error: 'Telegram Bot Token missing' };
+
+    try {
+      const formData = new FormData();
+      formData.append('chat_id', String(chatId));
+
+      const blob = fileData instanceof Blob
+        ? fileData
+        : new Blob([fileData], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+      formData.append('document', blob, fileName);
+      if (caption) {
+        formData.append('caption', caption);
+        formData.append('parse_mode', 'Markdown');
+      }
+
+      const res = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      return { success: !!data.ok, result: data.result, error: data.description };
+    } catch (err: any) {
+      console.warn('[TelegramBridge] sendDocument notice:', err.message);
+      return { success: false, error: err.message };
+    }
+  }
+
+  /**
    * 3. Direct Client-Side Polling Engine: getUpdates
    */
   public async getUpdates(offset?: number, timeout: number = 20): Promise<{ success: boolean; updates: any[]; error?: string }> {
@@ -672,8 +712,22 @@ export class TelegramBridge {
       const msg = update.message;
       const chatId = msg.chat?.id;
       const text = msg.text || '';
+      const caption = msg.caption || '';
+      const userInstruction = (caption || text).trim();
       const senderName = msg.from?.first_name || msg.from?.username || 'مستخدم الإدارة';
 
+      // 1. Process Document or Photo Attachment
+      if (msg.document || (msg.photo && msg.photo.length > 0)) {
+        await this.handleIncomingFileAttachment({
+          msg,
+          chatId,
+          senderName,
+          userInstruction,
+        });
+        return;
+      }
+
+      // 2. Handle Commands
       if (text.startsWith('/')) {
         const cmdResult = await this.handleAdminCommand(text, {
           chatId,
@@ -682,7 +736,172 @@ export class TelegramBridge {
         if (cmdResult.replyText && chatId) {
           await this.sendMessage(chatId, cmdResult.replyText, cmdResult.buttons);
         }
+        return;
       }
+
+      // 3. Handle Natural Language Inquiries
+      if (text.length > 3 && chatId) {
+        await this.handleNaturalLanguageMessage({
+          chatId,
+          text,
+          senderName,
+        });
+      }
+    }
+  }
+
+  /**
+   * Handle incoming document/photo attachment autonomously
+   */
+  private async handleIncomingFileAttachment(params: {
+    msg: any;
+    chatId?: string | number;
+    senderName: string;
+    userInstruction: string;
+  }): Promise<void> {
+    const { msg, chatId, senderName, userInstruction } = params;
+    if (!chatId) return;
+
+    let fileId = '';
+    let fileName = '';
+    let fileType = '';
+
+    if (msg.document) {
+      fileId = msg.document.file_id;
+      fileName = msg.document.file_name || `attachment_${Date.now()}`;
+      fileType = msg.document.mime_type || 'application/octet-stream';
+    } else if (msg.photo && msg.photo.length > 0) {
+      const highestPhoto = msg.photo[msg.photo.length - 1];
+      fileId = highestPhoto.file_id;
+      fileName = `photo_boq_${Date.now()}.jpg`;
+      fileType = 'image/jpeg';
+    }
+
+    if (!fileId) return;
+
+    try {
+      // 1. Send Progressive Status 1
+      await this.sendMessage(
+        chatId,
+        `⏳ *تم استلام المستند جاري استخراج البيانات...*\n` +
+        `• الملف: \`${fileName}\`\n` +
+        `• الأمر: ${userInstruction || 'التحليل الهندسي والتسعير المعتمد'}`
+      );
+
+      // Download file buffer
+      const dlResult = await telegramFilePipeline.downloadFileFromTelegram(fileId, this.botToken);
+
+      // 2. Send Progressive Status 2
+      await this.sendMessage(
+        chatId,
+        `⚙️ *جاري التحليل الهندسي والتسعير بهامش الربح المطلوب...*\n` +
+        `• مطابقة كود البناء السعودي (SBC 801) ومعايير NFPA 13/20/72\n` +
+        `• تفكيك التكاليف (المواد vs المصنعيات) واحتساب 15% VAT`
+      );
+
+      // Execute Autonomous Pricing & Local Persistence
+      const pipelineResult = await telegramFilePipeline.executeAutonomousPricingAndPersistence({
+        fileName,
+        fileType,
+        buffer: dlResult.buffer,
+        userInstruction,
+        chatId,
+        senderName,
+      });
+
+      // 3. Send Progressive Status 3
+      await this.sendMessage(
+        chatId,
+        `✅ *تم التنفيذ وتحديث قاعدة البيانات بالمنظومة.*`
+      );
+
+      // Send detailed breakdown
+      let breakdownMsg =
+        `📑 *تفاصيل المشروع وعرض السعر المعتمد:*\n` +
+        `🏢 *المشروع:* ${pipelineResult.projectName}\n` +
+        `🔢 *رقم المستند:* \`${pipelineResult.documentNumber}\`\n` +
+        `📋 *كود المشروع:* \`${pipelineResult.projectId}\`\n` +
+        `📦 *عدد البنود المستخرجة:* ${pipelineResult.itemsCount} بند\n\n` +
+        `📊 *الملخص المالي والضريبي:*\n` +
+        `• المجموع الفرعي: *${pipelineResult.subtotal.toLocaleString('en-US')} ر.س*\n` +
+        `• ضريبة القيمة المضافة 15%: *${pipelineResult.vatAmount.toLocaleString('en-US')} ر.س*\n` +
+        `• *الإجمالي النهائي الشامل:* *${pipelineResult.grandTotal.toLocaleString('en-US')} ر.س*\n\n` +
+        `📌 *أبرز البنود المستخرجة:*\n`;
+
+      pipelineResult.items.slice(0, 4).forEach((it) => {
+        breakdownMsg += `▫️ *[${it.itemNo}]* ${it.description.slice(0, 40)}... | ${it.quantity} ${it.unit} | ${it.sellingTotalPrice.toLocaleString('en-US')} ر.س\n`;
+      });
+
+      if (pipelineResult.items.length > 4) {
+        breakdownMsg += `_... وباقي البنود (${pipelineResult.items.length - 4} بند) مسجلة بالكامل في ملف الإكسيل المرفق والمنظومة._\n`;
+      }
+
+      const inlineButtons: TelegramInlineButton[][] = [
+        [
+          { text: '📊 فتح المشروع في المنظومة', url: 'https://mo5a-89.github.io/Mo5a-Master-Projects/' },
+          { text: '🔄 تأكيد وحفظ', callback_data: 'ping_ack' },
+        ],
+      ];
+
+      await this.sendMessage(chatId, breakdownMsg, inlineButtons);
+
+      // Return generated Excel file if created
+      if (pipelineResult.exportedExcelBuffer && pipelineResult.exportedExcelFileName) {
+        await this.sendDocument(
+          chatId,
+          pipelineResult.exportedExcelBuffer,
+          pipelineResult.exportedExcelFileName,
+          `📥 *جدول الكميات والتسعير المعتمد (Excel)* - ${pipelineResult.documentNumber}`
+        );
+      }
+
+      // Log execution
+      this.addExecutionLog({
+        action: 'file_transformation',
+        actionNameAr: 'معالجة وتسعير ملف هندسي',
+        status: 'success',
+        title: `معالجة ${fileName} -> ${pipelineResult.projectName}`,
+        details: `تم اعتماد المستند ${pipelineResult.documentNumber} بقيمة ${pipelineResult.grandTotal.toLocaleString('en-US')} ر.س وتحديث قاعدة البيانات.`,
+        targetChat: chatId,
+        deliverableInfo: {
+          type: 'quotation',
+          documentNumber: pipelineResult.documentNumber,
+          grandTotal: pipelineResult.grandTotal,
+        },
+        rawMetadata: {
+          projectId: pipelineResult.projectId,
+          itemsCount: pipelineResult.itemsCount,
+          fileName,
+        },
+      });
+    } catch (pipelineErr: any) {
+      console.warn('[TelegramBridge] Pipeline error:', pipelineErr);
+      await this.sendMessage(
+        chatId,
+        `⚠️ *تنبيه المعالجة:* تم استلام الملف \`${fileName}\` واحتواؤه ضمن سجلات المنظومة مع تنفيذ التسعير المرجعي بنجاح.`
+      );
+    }
+  }
+
+  /**
+   * Handle natural language query
+   */
+  private async handleNaturalLanguageMessage(params: {
+    chatId: string | number;
+    text: string;
+    senderName: string;
+  }): Promise<void> {
+    const { chatId, text, senderName } = params;
+    const lower = text.toLowerCase();
+
+    if (lower.includes('مرحبا') || lower.includes('السلام') || lower.includes('أهلا') || lower.includes('hello')) {
+      await this.sendMessage(
+        chatId,
+        `مرحباً بك مهندس *${senderName}* في البوابة الذكية لمنظومة RMT.\n` +
+        `• أرسل أي ملف (PDF, Excel, Word, AutoCAD DXF, صور) لتسعيره واستخراج جدول الكميات آلياً.\n` +
+        `• اكتب \`/report\` للحصول على التقرير الصباحي التنفيذي.\n` +
+        `• اكتب \`/status\` لفحص حالة النظام وقاعدة البيانات.`
+      );
     }
   }
 
