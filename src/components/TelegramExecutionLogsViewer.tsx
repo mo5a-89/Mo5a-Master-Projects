@@ -4,6 +4,7 @@ import {
   Activity,
   CheckCircle2,
   AlertTriangle,
+  AlertCircle,
   XCircle,
   RefreshCw,
   Trash2,

@@ -29,6 +29,7 @@ import {
   Activity,
   CheckCircle2,
   AlertTriangle,
+  AlertCircle,
   RefreshCw,
   Copy,
   Check,
@@ -303,7 +304,7 @@ export const AutonomousAgentsHub: React.FC<AutonomousAgentsHubProps> = ({
     completionPercentage: 75,
     totalExpenses: 1927500,
     status: 'In Progress',
-  } as Project;
+  } as unknown as Project;
 
   const currentEVM: EVMMetrics = calculateProjectEVM(currentSelectedProject);
   const currentCostCenters: DisciplineCostCenter[] = calculateDisciplineCostCenters(currentSelectedProject);

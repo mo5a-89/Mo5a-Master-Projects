@@ -56,18 +56,19 @@ export interface RetentionDLPSchedule {
  * Calculate EVM metrics for a single project or multi-project portfolio
  */
 export function calculateProjectEVM(project: Project): EVMMetrics {
+  const pAny = project as any;
   const bac = Number(project.contractValue) || 0;
   const completionFraction = Math.min(100, Math.max(0, Number(project.completionPercentage) || 0)) / 100;
   
   // Planned Value based on timeline or project phase
-  const pv = bac * (project.plannedProgressPercent ? project.plannedProgressPercent / 100 : Math.min(1, completionFraction * 1.05));
+  const pv = bac * (pAny.plannedProgressPercent ? pAny.plannedProgressPercent / 100 : Math.min(1, completionFraction * 1.05));
   
   // Earned Value = BAC * Actual % Complete
   const ev = bac * completionFraction;
   
   // Actual Cost = project direct expenses or fallback based on margin
-  const ac = Number(project.totalExpenses) > 0 
-    ? Number(project.totalExpenses) 
+  const ac = Number(pAny.totalExpenses) > 0 
+    ? Number(pAny.totalExpenses) 
     : ev * 0.78; // Default 78% cost ratio if untracked
 
   const cv = ev - ac;
@@ -221,27 +222,28 @@ export function calculateRetentionAndDLP(
   project: Project,
   invoices: Invoice[] = []
 ): RetentionDLPSchedule {
+  const pAny = project as any;
   const contractValue = Number(project.contractValue) || 0;
-  const retentionPercent = Number(project.retentionPercent) || 5; // Standard 5% or 10%
+  const retentionPercent = Number(pAny.retentionPercent) || 5; // Standard 5% or 10%
   const totalRetentionAmount = (contractValue * retentionPercent) / 100;
 
   // Project Invoices
   const projInvoices = invoices.filter((i) => i.projectId === project.id);
   const retentionAccumulatedSoFar = projInvoices.reduce(
-    (sum, inv) => sum + (Number(inv.retentionAmount) || 0),
+    (sum, inv) => sum + (Number((inv as any).retentionAmount) || 0),
     0
   ) || (contractValue * (Number(project.completionPercentage) || 0) / 100 * retentionPercent / 100);
 
-  const advancePaymentTotal = contractValue * (Number(project.advancePaymentPercent) || 10) / 100;
+  const advancePaymentTotal = contractValue * (Number(pAny.advancePaymentPercent) || 10) / 100;
   const advancePaymentAmortized = projInvoices.reduce(
-    (sum, inv) => sum + (Number(inv.advancePaymentDeduction) || 0),
+    (sum, inv) => sum + (Number((inv as any).advancePaymentDeduction || (inv as any).advanceDeduction) || 0),
     0
   ) || (advancePaymentTotal * (Number(project.completionPercentage) || 0) / 100);
   
   const advancePaymentRemaining = Math.max(0, advancePaymentTotal - advancePaymentAmortized);
 
-  const handoverDate = project.endDate || new Date().toISOString().split('T')[0];
-  const dlpDurationMonths = project.dlpDurationMonths || 24; // 24 months standard MEP warranty
+  const handoverDate = pAny.endDate || pAny.deadline || new Date().toISOString().split('T')[0];
+  const dlpDurationMonths = pAny.dlpDurationMonths || 24; // 24 months standard MEP warranty
   
   const handoverObj = new Date(handoverDate);
   const expirationObj = new Date(handoverObj);
@@ -269,7 +271,7 @@ export function calculateRetentionAndDLP(
   return {
     projectId: project.id,
     projectName: project.name,
-    clientName: project.customerName || project.clientName || 'العميل المعتمد',
+    clientName: project.customerName || pAny.clientName || 'العميل المعتمد',
     contractValue,
     retentionPercent,
     totalRetentionAmount,

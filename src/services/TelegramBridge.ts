@@ -228,6 +228,18 @@ export class TelegramBridge {
     this.notifyLogListeners();
   }
 
+  public getConfig(): TelegramBridgeConfig {
+    return this.config;
+  }
+
+  public updateConfig(partial: Partial<TelegramBridgeConfig>): TelegramBridgeConfig {
+    this.config = { ...this.config, ...partial };
+    if (partial.botToken !== undefined) {
+      this.botToken = partial.botToken;
+    }
+    return this.config;
+  }
+
   public updateToken(token: string) {
     this.botToken = token;
     this.config.botToken = token;
@@ -348,7 +360,7 @@ export class TelegramBridge {
     if (reportType === 'morning_briefing') {
       const projectsCount = reportData.projects?.length || 0;
       const activeInvoicesTotal = (reportData.invoices || []).reduce((s, i) => s + (Number(i.grandTotal) || 0), 0);
-      const pendingPOs = (reportData.purchaseOrders || []).filter((p) => p.status === 'issued' || p.status === 'pending_executive_approval').length;
+      const pendingPOs = (reportData.purchaseOrders || []).filter((p: any) => p.status === 'Issued' || p.status === 'Draft' || p.status === 'issued' || p.status === 'pending_executive_approval').length;
 
       reportMarkdown = `👑 *التقرير الصباحي التنفيذي - منظومة RMT*
 📅 *اليوم:* ${now}

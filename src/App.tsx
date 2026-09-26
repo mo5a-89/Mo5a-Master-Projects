@@ -253,6 +253,7 @@ export function App() {
     | 'status_breakdown'
     | 'supplier_quotations'
     | 'site_logistics'
+    | 'autonomous_agents'
     | 'settings'
   >('dashboard');
 

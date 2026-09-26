@@ -1947,6 +1947,48 @@ User Question: "${question}"`;
   }
 });
 
+function loadDatabase(): any {
+  try {
+    if (!fs.existsSync(DB_FILE)) return {};
+    const raw = fs.readFileSync(DB_FILE, 'utf-8');
+    return JSON.parse(raw) || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveDatabase(data: any, _reason?: string) {
+  try {
+    const tempFile = `${DB_FILE}.tmp`;
+    fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf-8');
+    fs.renameSync(tempFile, DB_FILE);
+  } catch (err) {
+    console.error('Failed to save database:', err);
+  }
+}
+
+async function sendTelegramMessage(botToken: string, chatId: string | number, text: string, replyMarkup?: any): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    const payload: any = {
+      chat_id: chatId,
+      text,
+      parse_mode: 'Markdown',
+    };
+    if (replyMarkup) {
+      payload.reply_markup = replyMarkup;
+    }
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    return { success: Boolean(data.ok), data, error: data.description };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
 // =========================================================================
 // Telegram Bot & Autonomous Multi-Agent Management Endpoints
 // =========================================================================
