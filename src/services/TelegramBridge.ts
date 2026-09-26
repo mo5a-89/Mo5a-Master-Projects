@@ -106,7 +106,7 @@ export class TelegramBridge {
   private loadLogsFromStorage(): void {
     if (typeof window === 'undefined') return;
     try {
-      const saved = localStorage.getItem('rmt_telegram_execution_logs');
+      const saved = localStorage.getItem('rmt_telegram_logs') || localStorage.getItem('rmt_telegram_execution_logs');
       if (saved) {
         this.executionLogs = JSON.parse(saved);
       }
@@ -150,6 +150,7 @@ export class TelegramBridge {
     if (typeof window === 'undefined') return;
     try {
       const trimmed = this.executionLogs.slice(0, 100);
+      localStorage.setItem('rmt_telegram_logs', JSON.stringify(trimmed));
       localStorage.setItem('rmt_telegram_execution_logs', JSON.stringify(trimmed));
     } catch (e) {
       console.warn('[TelegramBridge] Failed to save execution logs to localStorage:', e);
@@ -210,6 +211,7 @@ export class TelegramBridge {
     this.executionLogs = [];
     if (typeof window !== 'undefined') {
       try {
+        localStorage.removeItem('rmt_telegram_logs');
         localStorage.removeItem('rmt_telegram_execution_logs');
       } catch (e) {
         console.warn(e);

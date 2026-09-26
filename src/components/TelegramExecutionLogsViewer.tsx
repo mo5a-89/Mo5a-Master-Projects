@@ -36,7 +36,15 @@ export const TelegramExecutionLogsViewer: React.FC<TelegramExecutionLogsViewerPr
   className = '',
   maxLogs = 20,
 }) => {
-  const [logs, setLogs] = useState<TelegramExecutionLog[]>([]);
+  const [logs, setLogs] = useState<TelegramExecutionLog[]>(() => {
+    try {
+      const raw = localStorage.getItem('rmt_telegram_logs') || localStorage.getItem('rmt_telegram_execution_logs');
+      if (raw) {
+        return JSON.parse(raw).slice(0, maxLogs);
+      }
+    } catch {}
+    return telegramBridge.getExecutionLogs(maxLogs);
+  });
   const [filterStatus, setFilterStatus] = useState<'all' | 'success' | 'error' | 'report' | 'file'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);

@@ -313,17 +313,35 @@ export const AutonomousAgentsHub: React.FC<AutonomousAgentsHubProps> = ({
 
   // Load Telegram config on mount
   useEffect(() => {
-    const cfg = telegramBridge.loadConfigFromStorage();
-    if (cfg) {
-      setTelegramConfig({
-        botToken: cfg.botToken || '',
-        botUsername: cfg.botUsername || 'RMT_Enterprise_Bot',
-        webhookUrl: cfg.webhookUrl || '',
-        isPollingActive: !!cfg.isPollingActive,
-        authorizedChatIds: cfg.authorizedChatIds || [],
-        executivePasscode: cfg.executivePasscode || 'RMT@2026',
-        status: cfg.isPollingActive ? 'polling' : cfg.botToken ? 'configured' : 'disconnected',
-      });
+    try {
+      const raw = localStorage.getItem('rmt_telegram_config');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setTelegramConfig((prev) => ({
+          ...prev,
+          botToken: parsed.botToken || prev.botToken,
+          botUsername: parsed.botUsername || prev.botUsername,
+          authorizedChatIds: parsed.authorizedChatIds || prev.authorizedChatIds,
+          executivePasscode: parsed.executivePin || parsed.executivePasscode || prev.executivePasscode,
+          isPollingActive: !!parsed.isPollingActive,
+          status: parsed.isPollingActive ? 'polling' : parsed.botToken ? 'configured' : 'disconnected',
+        }));
+      } else {
+        const cfg = telegramBridge.loadConfigFromStorage();
+        if (cfg) {
+          setTelegramConfig({
+            botToken: cfg.botToken || '',
+            botUsername: cfg.botUsername || 'RMT_Enterprise_Bot',
+            webhookUrl: cfg.webhookUrl || '',
+            isPollingActive: !!cfg.isPollingActive,
+            authorizedChatIds: cfg.authorizedChatIds || [],
+            executivePasscode: cfg.executivePasscode || 'RMT@2026',
+            status: cfg.isPollingActive ? 'polling' : cfg.botToken ? 'configured' : 'disconnected',
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('[AutonomousAgentsHub] Error loading telegram config:', e);
     }
   }, []);
 
@@ -461,21 +479,25 @@ export const AutonomousAgentsHub: React.FC<AutonomousAgentsHubProps> = ({
   const handleSaveTelegramConfig = async () => {
     setIsSavingTg(true);
     try {
-      telegramBridge.saveConfigToStorage({
+      const configToPersist = {
         botToken: telegramConfig.botToken.trim(),
         botUsername: telegramConfig.botUsername.trim(),
+        executivePin: telegramConfig.executivePasscode || 'RMT@2026',
         authorizedChatIds: telegramConfig.authorizedChatIds,
-        executivePasscode: telegramConfig.executivePasscode,
         isPollingActive: telegramConfig.isPollingActive,
-      });
+      };
+      localStorage.setItem('rmt_telegram_config', JSON.stringify(configToPersist));
+      telegramBridge.saveConfigToStorage(configToPersist);
       setTgSaveSuccess(true);
+      alert('تم حفظ إعدادات البوت بنجاح');
       setTimeout(() => setTgSaveSuccess(false), 3000);
-    } catch (err) {
-      alert('فشل حفظ إعدادات البوت.');
+    } catch (err: any) {
+      alert('فشل حفظ إعدادات البوت: ' + (err?.message || 'خطأ غير معروف'));
     } finally {
       setIsSavingTg(false);
     }
   };
+  const handleSaveConfig = handleSaveTelegramConfig;
 
   const handleTogglePolling = async () => {
     const nextState = !telegramConfig.isPollingActive;
