@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" width="100%" height="100%" fill="none">
+  <defs>
+    <linearGradient id="rmt-r-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00A859" />
+      <stop offset="50%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#0D9488" />
+    </linearGradient>
+    <linearGradient id="rmt-bridge-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0D9488" />
+      <stop offset="50%" stop-color="#1E5AA0" />
+      <stop offset="100%" stop-color="#174A84" />
+    </linearGradient>
+  </defs>
+
+  <!-- Letter R (Vibrant Corporate Green) -->
+  <!-- Vertical Stem -->
+  <path d="M 16 14 L 32 14 L 32 106 L 16 106 Z" fill="#00A859" />
+  
+  <!-- Upper Loop with transparent cutout -->
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M 32 14 L 70 14 C 82 14 88 20 88 34 C 88 48 82 54 70 54 L 32 54 Z M 32 26 L 66 26 C 72 26 74 28 74 34 C 74 40 72 42 66 42 L 32 42 Z" fill="#00A859" />
+  
+  <!-- Diagonal Leg of R -->
+  <path d="M 44 54 L 62 54 L 84 106 L 66 106 Z" fill="url(#rmt-r-grad)" />
+
+  <!-- Interlocking Bridge -->
+  <path d="M 66 106 L 84 106 L 106 34 L 88 34 Z" fill="url(#rmt-bridge-grad)" />
+
+  <!-- Letter M (Corporate Blue #174A84) -->
+  <path d="M 102 34 L 116 78 L 130 34 L 146 34 L 146 106 L 132 106 L 132 60 L 122 94 L 110 94 L 100 60 L 100 106 L 86 106 L 86 34 Z" fill="#174A84" />
+</svg>

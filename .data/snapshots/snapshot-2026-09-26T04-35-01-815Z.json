@@ -1,0 +1,367 @@
+{
+  "updatedAt": "2026-09-26T04:35:01.815Z",
+  "version": 1,
+  "stats": {
+    "projectsCount": 0,
+    "invoicesCount": 0,
+    "quotationsCount": 0,
+    "purchaseOrdersCount": 0,
+    "deliveryNotesCount": 0,
+    "totalBilledAmount": 0
+  },
+  "data": {
+    "projects": [],
+    "customerQuotations": [],
+    "supplierQuotations": [],
+    "purchaseOrders": [],
+    "invoices": [],
+    "deliveryNotes": [],
+    "customers": [
+      {
+        "id": "CUST-0001",
+        "name": "KAMCO.1",
+        "companyName": "KAMCO.1",
+        "contactPerson": "KAREEM HAMDI",
+        "attnName": "KAREEM HAMDI",
+        "position": "Purchasing & Contracts Manager",
+        "phone": "0501234567",
+        "mobile": "0501234567",
+        "email": "",
+        "vatNo": "300994821100003",
+        "vatNumber": "300994821100003",
+        "location": "DAHRAN",
+        "address": "Eastern Province - Dahran",
+        "createdAt": "2026-01-01T08:00:00.000Z"
+      }
+    ],
+    "suppliers": [
+      {
+        "id": "supp-1",
+        "name": "HADI KANANI COMPANY",
+        "contactPerson": "Fayez Ahmed",
+        "phoneEmail": "+966506761930 - f.ahmed@hkenani.com",
+        "vatNo": "311984726100003",
+        "address": "Contracting Services MEP - ELV - O&M",
+        "systems": [],
+        "brands": []
+      }
+    ],
+    "termsLibrary": [],
+    "clientMasters": [],
+    "threeWayMatches": [],
+    "estimates": [],
+    "users": [
+      {
+        "id": "usr-master-mokhtar",
+        "username": "mokhtar.creator",
+        "email": "Mok7tar.89@gmail.com",
+        "fullName": "مختار أبورزق (Master Creator)",
+        "name": "مختار أبورزق (Master Creator)",
+        "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+        "role": "admin",
+        "department": "System Architecture & Executive Ownership / التطوير والملكية العامة",
+        "jobTitle": "Master Creator & Executive Owner",
+        "phone": "+966 599787793",
+        "isActive": true,
+        "isMasterAdmin": true,
+        "masterRoleTitle": "Master Creator",
+        "canDeleteAdmins": true,
+        "createdAt": "2026-01-01T08:00:00.000Z",
+        "lastLogin": "2026-09-24T21:30:00.000Z",
+        "lastLoginAt": "2026-09-24T21:30:00.000Z",
+        "passwordHash": "6d11a613c7164adc8abaa7057965c72727646bef6201c105ce30d3a3f41014ea",
+        "permissions": {
+          "canAccessAdminPanel": true,
+          "canManageUsers": true,
+          "canEditFinancialMargins": true,
+          "canCreateProject": true,
+          "canDeleteProject": true,
+          "canManageQuotations": true,
+          "canUploadQuotations": true,
+          "canIssueInvoices": true,
+          "canManageProcurement": true,
+          "canApprovePO": true,
+          "canUpdateFieldExecution": true,
+          "canExportData": true,
+          "canDeleteAdmins": true
+        },
+        "systemPermissions": [
+          "ESTIMATING_VIEW",
+          "ESTIMATING_EDIT_RATES",
+          "ESTIMATING_PROMOTE",
+          "PROCUREMENT_VIEW",
+          "PROCUREMENT_CREATE_PO",
+          "PROCUREMENT_APPROVE_PO",
+          "FINANCE_VIEW_PROFIT_MARGINS",
+          "FINANCE_ISSUE_INVOICE",
+          "FINANCE_AUDIT_APPROVE",
+          "SYSTEM_ADMIN_USERS",
+          "SYSTEM_CONFIG_SETTINGS",
+          "SYSTEM_AUDIT_PURGE"
+        ]
+      }
+    ],
+    "systemSettings": {
+      "companyIdentity": {
+        "officialArabicName": "شركة صناع الموارد التجارية",
+        "officialEnglishName": "RMT - Resource Makers Trading Est.",
+        "crNumber": "2050167793",
+        "vatNumber": "311552664400003",
+        "bankName": "Al Rajhi Bank (مصرف الراجحي)",
+        "iban": "SA7180000450608010001399",
+        "autoSealAndSignature": true,
+        "logoUrl": "",
+        "bankSwift": "RJHISARI",
+        "poBox": "PO BOX 32511 - Saudi Arabia",
+        "addressEn": "Kingdom of Saudi Arabia, Dammam, Al Shate Al gharbi",
+        "addressAr": "حي الشاطئ الغربي - الدمام - المملكة العربية السعودية",
+        "phone": "+966 549220606",
+        "mobiles": [
+          "+966 549220606",
+          "+966 599 7877 93",
+          "+966 573 5080 33"
+        ],
+        "email": "info@rmt-sa.com",
+        "website": "www.rmt-sa.com",
+        "engineerName": "",
+        "engineerTitle": "Projects Manager",
+        "engineerEmail": "",
+        "financeDirector": "",
+        "financeDirectorAr": "",
+        "financeDirectorTitle": "Financial Controller & Auditor (المدير المالي والتدقيق)"
+      },
+      "financialPolicies": {
+        "defaultVatRate": 15,
+        "overheadPercentage": 10,
+        "profitMarginPercentage": 20,
+        "retentionRate": 10,
+        "defaultAdvance": 30,
+        "decimalPrecision": 2,
+        "currencyDisplay": "SAR"
+      },
+      "autoNumbering": {
+        "projectPrefix": "PRJ-",
+        "quotationPrefix": "QT-RMT-",
+        "invoicePrefix": "INV-",
+        "purchaseOrderPrefix": "PO-",
+        "deliveryNotePrefix": "DN-",
+        "sequenceDigits": 4,
+        "seqQuote": 1,
+        "seqPO": 1,
+        "seqInvoice": 1,
+        "seqDN": 1,
+        "seqProject": 1
+      },
+      "navigationPillars": {
+        "p1_label": "الرقابة التنفيذية والسيولة",
+        "p2_label": "عروض الأسعار والتسعير",
+        "p3_label": "المشاريع والعمليات",
+        "p4_label": "المشتريات والتوريد",
+        "p5_label": "المالية والفواتير",
+        "p6_label": "الحوكمة والسيادة السحابية"
+      },
+      "menuCustomization": {
+        "projectsLabel": "المشاريع والعمليات",
+        "quotationsLabel": "عروض الأسعار والتسعير",
+        "procurementLabel": "المشتريات والتوريد",
+        "financeLabel": "المالية والفواتير",
+        "siteExecutionLabel": "التنفيذ والمتابعة الميدانية",
+        "labels": {
+          "pillars": {
+            "pillar1": "1. الرقابة العليا والسيولة",
+            "pillar2": "2. الهندسة ودراسة العطاءات",
+            "pillar3": "3. المشاريع والتنفيذ الميداني",
+            "pillar4": "4. سلاسل الإمداد والمشتريات",
+            "pillar5": "5. المالية ومراقبة التكاليف",
+            "pillar6": "6. الحوكمة والسيادة السحابية"
+          },
+          "tabs": {
+            "dashboard": "لوحة التحكم التنفيذية",
+            "cash_flow_sentinel": "حارس السيولة وتدفقات النقد 30 يوماً",
+            "status_breakdown": "حالات وترسيات المشاريع",
+            "estimating_workbench": "منصة دراسة العطاءات والمقارنة السعرية",
+            "quotations": "عروض أسعار العملاء وجداول الكميات",
+            "supplier_quotations": "عروض الموردين ومقارنة الأسعار",
+            "terms": "مكتبة الشروط والمواصفات",
+            "projects": "إدارة المشاريع والعقود",
+            "procurement_mgmt": "إدارة المشتريات وأوامر الشراء",
+            "purchase_orders": "أوامر الشراء الصادرة للموردين",
+            "invoices": "الفواتير والمستخلصات الضريبية",
+            "directory": "دليل الشركاء والموردين",
+            "settings": "إعدادات المنظومة وتخصيص بيئة العمل",
+            "site_logistics": "التنفيذ والمتابعة الميدانية"
+          }
+        }
+      },
+      "corporate": {
+        "officialArabicName": "شركة صناع الموارد التجارية",
+        "officialEnglishName": "RMT - Resource Makers Trading Est.",
+        "crNumber": "2050167793",
+        "vatNumber": "311552664400003",
+        "bankName": "Al Rajhi Bank (مصرف الراجحي)",
+        "iban": "SA7180000450608010001399",
+        "autoSealAndSignature": true,
+        "logoUrl": "",
+        "bankSwift": "RJHISARI",
+        "poBox": "PO BOX 32511 - Saudi Arabia",
+        "addressEn": "Kingdom of Saudi Arabia, Dammam, Al Shate Al gharbi",
+        "addressAr": "حي الشاطئ الغربي - الدمام - المملكة العربية السعودية",
+        "phone": "+966 549220606",
+        "mobiles": [
+          "+966 549220606",
+          "+966 599 7877 93",
+          "+966 573 5080 33"
+        ],
+        "email": "info@rmt-sa.com",
+        "website": "www.rmt-sa.com",
+        "engineerName": "",
+        "engineerTitle": "Projects Manager",
+        "engineerEmail": "",
+        "financeDirector": "",
+        "financeDirectorAr": "",
+        "financeDirectorTitle": "Financial Controller & Auditor (المدير المالي والتدقيق)",
+        "nameAr": "شركة صناع الموارد التجارية",
+        "nameEn": "RMT - Resource Makers Trading Est.",
+        "tradeNameEn": "RMT - Resource Makers Trading Est.",
+        "bankIban": "SA7180000450608010001399",
+        "bankAccountName": "شركة صناع الموارد التجارية"
+      },
+      "financial": {
+        "defaultVatRate": 15,
+        "overheadPercentage": 10,
+        "profitMarginPercentage": 20,
+        "retentionRate": 10,
+        "defaultAdvance": 30,
+        "decimalPrecision": 2,
+        "currencyDisplay": "SAR",
+        "defaultMarkup": 25,
+        "defaultGrossMargin": 20,
+        "defaultRetention": 10,
+        "defaultVat": 15
+      },
+      "numbering": {
+        "projectPrefix": "PRJ-",
+        "quotationPrefix": "QT-RMT-",
+        "invoicePrefix": "INV-",
+        "purchaseOrderPrefix": "PO-",
+        "deliveryNotePrefix": "DN-",
+        "sequenceDigits": 4,
+        "seqQuote": 1,
+        "seqPO": 1,
+        "seqInvoice": 1,
+        "seqDN": 1,
+        "seqProject": 1,
+        "prefixQuote": "QT-RMT-",
+        "prefixPO": "PO-",
+        "prefixInvoice": "INV-",
+        "prefixDN": "DN-",
+        "prefixProject": "PRJ-"
+      },
+      "navigation": {
+        "labels": {
+          "pillars": {
+            "pillar1": "1. الرقابة العليا والسيولة",
+            "pillar2": "2. الهندسة ودراسة العطاءات",
+            "pillar3": "3. المشاريع والتنفيذ الميداني",
+            "pillar4": "4. سلاسل الإمداد والمشتريات",
+            "pillar5": "5. المالية ومراقبة التكاليف",
+            "pillar6": "6. الحوكمة والسيادة السحابية"
+          },
+          "tabs": {
+            "dashboard": "لوحة التحكم التنفيذية",
+            "cash_flow_sentinel": "حارس السيولة وتدفقات النقد 30 يوماً",
+            "status_breakdown": "حالات وترسيات المشاريع",
+            "estimating_workbench": "منصة دراسة العطاءات والمقارنة السعرية",
+            "quotations": "عروض أسعار العملاء وجداول الكميات",
+            "supplier_quotations": "عروض الموردين ومقارنة الأسعار",
+            "terms": "مكتبة الشروط والمواصفات",
+            "projects": "إدارة المشاريع والعقود",
+            "procurement_mgmt": "إدارة المشتريات وأوامر الشراء",
+            "purchase_orders": "أوامر الشراء الصادرة للموردين",
+            "invoices": "الفواتير والمستخلصات الضريبية",
+            "directory": "دليل الشركاء والموردين",
+            "settings": "إعدادات المنظومة وتخصيص بيئة العمل",
+            "site_logistics": "التنفيذ والمتابعة الميدانية"
+          }
+        }
+      },
+      "appearance": {
+        "themeMode": "light",
+        "primaryColor": "#174A84",
+        "accentColor": "#007A5A",
+        "fontFamily": "Cairo",
+        "uiDensity": "normal",
+        "language": "ar"
+      },
+      "rbac": {
+        "users": [
+          {
+            "id": "usr-master-mokhtar",
+            "username": "mokhtar.creator",
+            "email": "Mok7tar.89@gmail.com",
+            "fullName": "مختار أبورزق (Master Creator)",
+            "name": "مختار أبورزق (Master Creator)",
+            "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+            "role": "admin",
+            "department": "System Architecture & Executive Ownership / التطوير والملكية العامة",
+            "jobTitle": "Master Creator & Executive Owner",
+            "phone": "+966 599787793",
+            "isActive": true,
+            "isMasterAdmin": true,
+            "masterRoleTitle": "Master Creator",
+            "canDeleteAdmins": true,
+            "createdAt": "2026-01-01T08:00:00.000Z",
+            "lastLogin": "2026-09-24T21:30:00.000Z",
+            "lastLoginAt": "2026-09-24T21:30:00.000Z",
+            "passwordHash": "6d11a613c7164adc8abaa7057965c72727646bef6201c105ce30d3a3f41014ea",
+            "permissions": {
+              "canAccessAdminPanel": true,
+              "canManageUsers": true,
+              "canEditFinancialMargins": true,
+              "canCreateProject": true,
+              "canDeleteProject": true,
+              "canManageQuotations": true,
+              "canUploadQuotations": true,
+              "canIssueInvoices": true,
+              "canManageProcurement": true,
+              "canApprovePO": true,
+              "canUpdateFieldExecution": true,
+              "canExportData": true,
+              "canDeleteAdmins": true
+            },
+            "systemPermissions": [
+              "ESTIMATING_VIEW",
+              "ESTIMATING_EDIT_RATES",
+              "ESTIMATING_PROMOTE",
+              "PROCUREMENT_VIEW",
+              "PROCUREMENT_CREATE_PO",
+              "PROCUREMENT_APPROVE_PO",
+              "FINANCE_VIEW_PROFIT_MARGINS",
+              "FINANCE_ISSUE_INVOICE",
+              "FINANCE_AUDIT_APPROVE",
+              "SYSTEM_ADMIN_USERS",
+              "SYSTEM_CONFIG_SETTINGS",
+              "SYSTEM_AUDIT_PURGE"
+            ]
+          }
+        ]
+      },
+      "auditLogs": [],
+      "lastCommittedAt": "2026-09-26T04:30:55.380Z"
+    },
+    "_snapshotNote": "Auto-Sync from MEP Control System"
+  },
+  "snapshotMetadata": {
+    "id": "pitr-2026-09-26T04-35-01-815Z",
+    "timestamp": "2026-09-26T04:35:01.815Z",
+    "stats": {
+      "projectsCount": 0,
+      "invoicesCount": 0,
+      "quotationsCount": 0,
+      "purchaseOrdersCount": 0,
+      "deliveryNotesCount": 0,
+      "totalBilledAmount": 0
+    },
+    "note": "Auto-Sync from MEP Control System"
+  }
+}

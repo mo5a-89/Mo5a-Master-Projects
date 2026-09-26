@@ -1,0 +1,58 @@
+{
+  "id": "/",
+  "name": "Master Projects Tracking System",
+  "short_name": "MEP Master",
+  "description": "Integrated MEP engineering platform for مؤسسة صناع الموارد التجاريه (Resource Makers Trading Est.). Converts supplier quotations into customer quotations, tracks costs, systems, customers, suppliers, and terms.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#007A5A",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "المشاريع",
+      "short_name": "المشاريع",
+      "description": "استعراض ومتابعة المشاريع",
+      "url": "/?tab=projects",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "عروض الأسعار",
+      "short_name": "العروض",
+      "description": "إعداد وتسعير عروض الأسعار",
+      "url": "/?tab=quotations",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "الفواتير والمحاسبة",
+      "short_name": "الفواتير",
+      "description": "متابعة الفواتير والتحصيلات",
+      "url": "/?tab=invoices",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

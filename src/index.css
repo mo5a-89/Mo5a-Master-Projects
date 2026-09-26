@@ -1,0 +1,342 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--app-font-family), sans-serif;
+  --font-cairo: 'Cairo', sans-serif;
+  --font-tajawal: 'Tajawal', sans-serif;
+  --font-ibm: 'IBM Plex Sans Arabic', sans-serif;
+  --font-almarai: 'Almarai', sans-serif;
+  --font-alexandria: 'Alexandria', sans-serif;
+}
+
+@variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --app-font-family: 'Cairo', sans-serif;
+  }
+  html, body, #root, input, button, select, textarea, div, span, p, h1, h2, h3, h4, h5, h6, table, th, td {
+    font-family: var(--app-font-family) !important;
+  }
+  html, body, #root {
+    min-height: 100dvh;
+  }
+}
+
+@variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --app-font-family: 'Cairo', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+  html, body, #root {
+    font-family: var(--app-font-family);
+    min-height: 100dvh;
+  }
+}
+
+/* ========================================================================= */
+/* ULTRA-SLIM MINIMALIST SCROLLBAR ENGINE                                    */
+/* ========================================================================= */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+}
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.4);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(71, 85, 105, 0.7);
+}
+
+/* Specific Slim Light-Gray Sidebar Scrollbar with Hidden Background Track */
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(226, 232, 240, 0.25) transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(226, 232, 240, 0.25);
+  border-radius: 9999px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(226, 232, 240, 0.5);
+}
+
+/* ========================================================================= */
+/* SOOTHING CALM SLATE-GRAY NIGHT MODE (RESTFUL ON EYES & DISTINCT FOCUS)   */
+/* Transforms all blinding white cards into a serene, high-readability slate */
+/* ========================================================================= */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #0B1322 !important;
+  color: #E2E8F0 !important;
+}
+
+/* 1. Transform primary white cards/boxes into a calm, gentle slate-gray surface */
+html.dark:not(.printing-active) .bg-white,
+html.dark:not(.printing-active) .bg-white\/95,
+html.dark:not(.printing-active) .bg-white\/90,
+html.dark:not(.printing-active) .bg-white\/80 {
+  background-color: #162032 !important;
+  color: #E2E8F0;
+}
+
+/* 2. Secondary soft gray inner containers (sub-wells, summary strips, table headers) */
+html.dark:not(.printing-active) .bg-slate-50,
+html.dark:not(.printing-active) .bg-slate-100,
+html.dark:not(.printing-active) .bg-gray-50,
+html.dark:not(.printing-active) .bg-gray-100 {
+  background-color: #111A29 !important;
+}
+
+html.dark:not(.printing-active) .bg-slate-100\/80,
+html.dark:not(.printing-active) .bg-slate-100\/90 {
+  background-color: #131E30 !important;
+}
+
+/* 3. Refined borders for calm separation */
+html.dark:not(.printing-active) .border-slate-100,
+html.dark:not(.printing-active) .border-slate-200,
+html.dark:not(.printing-active) .border-slate-300,
+html.dark:not(.printing-active) .border-gray-200,
+html.dark:not(.printing-active) .border-slate-200\/90 {
+  border-color: #243349 !important;
+}
+
+/* 4. High-clarity, eye-friendly typography */
+html.dark:not(.printing-active) .text-slate-900,
+html.dark:not(.printing-active) .text-slate-800,
+html.dark:not(.printing-active) .text-gray-900,
+html.dark:not(.printing-active) .text-gray-800 {
+  color: #F1F5F9 !important;
+}
+
+html.dark:not(.printing-active) .text-slate-700,
+html.dark:not(.printing-active) .text-slate-600,
+html.dark:not(.printing-active) .text-gray-700,
+html.dark:not(.printing-active) .text-gray-600 {
+  color: #CBD5E1 !important;
+}
+
+html.dark:not(.printing-active) .text-slate-500,
+html.dark:not(.printing-active) .text-gray-500 {
+  color: #94A3B8 !important;
+}
+
+/* 5. Inputs, selects, and textareas in night mode */
+html.dark:not(.printing-active) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+html.dark:not(.printing-active) select,
+html.dark:not(.printing-active) textarea {
+  background-color: #0E1624 !important;
+  color: #F8FAFC !important;
+  border-color: #2B3D56 !important;
+}
+
+html.dark:not(.printing-active) input::placeholder,
+html.dark:not(.printing-active) textarea::placeholder {
+  color: #64748B !important;
+}
+
+/* 6. Subtle soft shadows for dark elevation */
+html.dark:not(.printing-active) .shadow-xs,
+html.dark:not(.printing-active) .shadow-sm,
+html.dark:not(.printing-active) .shadow-md,
+html.dark:not(.printing-active) .shadow-lg {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Strict Container Sizing for Reports & Modals */
+
+.report-container {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.report-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media print {
+  header,
+  nav,
+  aside,
+  .no-print,
+  .action-bar,
+  .top-header-nav,
+  button,
+  input[type="button"],
+  input[type="submit"],
+  .no-print * {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    background-color: white !important;
+    color: #0f172a !important;
+    font-size: 9pt;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 12mm 10mm 15mm 10mm;
+  }
+
+  html, body {
+    height: auto !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11px !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-container {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .signatures-block {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* When printing, hide normal app layout behind modals */
+  body.printing-active #root > *:not(:has(.print-modal-container)) {
+    display: none !important;
+  }
+
+  /* Reset fixed modal overlay to full page block */
+  .print-modal-container {
+    position: static !important;
+    inset: auto !important;
+    overflow: visible !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .print-modal-content {
+    box-shadow: none !important;
+    border: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #printable-customer-soa,
+  #printable-final-handover-report,
+  #printable-accounting-report,
+  #printable-project-financial-report,
+  #printable-status-report,
+  #printable-statement-soa,
+  #printable-supplier-quote-detail,
+  #printable-tax-invoice,
+  #printable-delivery-note,
+  #printable-purchase-order,
+  .printable-document {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .report-table-scroll,
+  .overflow-x-auto {
+    overflow: visible !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+    page-break-inside: auto;
+    font-size: 8pt !important;
+  }
+
+  th, td {
+    padding: 3px 5px !important;
+    word-break: break-word !important;
+  }
+
+  tr, .break-inside-avoid, .print-avoid-break, [data-print-avoid-break] {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-after: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
+}

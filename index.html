@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Gracefully handle Vite development client in AI Studio sandbox where HMR is disabled
+      (function() {
+        // 1. Provide an inert mock WebSocket for Vite HMR so connection promises resolve cleanly
+        const NativeWebSocket = window.WebSocket;
+        if (typeof EventTarget !== 'undefined') {
+          class MockViteHmrSocket extends EventTarget {
+            constructor(url, protocols) {
+              super();
+              this.url = String(url);
+              this.protocol = Array.isArray(protocols) ? protocols[0] : (protocols || 'vite-hmr');
+              this.readyState = 0; // CONNECTING
+              this.onopen = null;
+              this.onclose = null;
+              this.onerror = null;
+              this.onmessage = null;
+
+              setTimeout(() => {
+                this.readyState = 1; // OPEN
+                const openEvent = new Event('open');
+                if (typeof this.onopen === 'function') this.onopen(openEvent);
+                this.dispatchEvent(openEvent);
+              }, 5);
+            }
+
+            send() {}
+
+            close(code, reason) {
+              this.readyState = 3; // CLOSED
+              const closeEvent = typeof CloseEvent !== 'undefined' ? new CloseEvent('close', { code: code || 1000 }) : new Event('close');
+              if (typeof this.onclose === 'function') this.onclose(closeEvent);
+              this.dispatchEvent(closeEvent);
+            }
+          }
+
+          window.WebSocket = function(url, protocols) {
+            const isViteHmr =
+              (protocols === 'vite-hmr' || (Array.isArray(protocols) && protocols.includes('vite-hmr'))) ||
+              (typeof url === 'string' && (url.includes(':24678') || url.includes('token=')));
+            if (isViteHmr) {
+              return new MockViteHmrSocket(url, protocols);
+            }
+            return NativeWebSocket ? new NativeWebSocket(url, protocols) : {};
+          };
+          if (NativeWebSocket) {
+            window.WebSocket.prototype = NativeWebSocket.prototype;
+          }
+          window.WebSocket.CONNECTING = 0;
+          window.WebSocket.OPEN = 1;
+          window.WebSocket.CLOSING = 2;
+          window.WebSocket.CLOSED = 3;
+        }
+
+        // 2. Defensive handling for browser extensions & third-party content scripts
+        if (typeof window.chrome === 'undefined') {
+          try {
+            window.chrome = {};
+          } catch (_) {}
+        }
+        if (window.chrome && !window.chrome.runtime) {
+          try {
+            window.chrome.runtime = {
+              sendMessage: function() {
+                return Promise.resolve();
+              },
+              connect: function() {
+                return {
+                  onMessage: { addListener: function() {} },
+                  onDisconnect: { addListener: function() {} },
+                  postMessage: function() {},
+                  disconnect: function() {}
+                };
+              },
+              id: 'rmt-applet-mock'
+            };
+          } catch (_) {}
+        } else if (window.chrome && window.chrome.runtime) {
+          const origSendMessage = window.chrome.runtime.sendMessage;
+          if (typeof origSendMessage === 'function') {
+            window.chrome.runtime.sendMessage = function(...msgArgs) {
+              try {
+                const res = origSendMessage.apply(window.chrome.runtime, msgArgs);
+                if (res && typeof res.catch === 'function') {
+                  return res.catch((_) => {});
+                }
+                return res;
+              } catch (_) {
+                return Promise.resolve();
+              }
+            };
+          }
+        }
+
+        // 3. Clean up any stale service workers in development iframe to prevent request hijacking
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for (let reg of registrations) {
+              reg.unregister();
+            }
+          }).catch(function() {});
+        }
+
+        // 4. Intercept and isolate any Vite HMR or browser extension injected errors
+        const origError = console.error;
+        const origWarn = console.warn;
+        function isBenignErrorLog(args) {
+          if (!args || !args.length) return false;
+          for (let i = 0; i < args.length; i++) {
+            const item = args[i];
+            const str = typeof item === 'string' ? item : (item && typeof item.message === 'string' ? item.message : '');
+            if (
+              str.includes('[vite]') ||
+              str.includes('WebSocket') ||
+              str.includes('websocket') ||
+              str.includes('Could not establish connection') ||
+              str.includes('Receiving end does not exist') ||
+              str.includes('serviceName') ||
+              str.includes('chrome-extension://') ||
+              str.includes('content.js')
+            ) {
+              return true;
+            }
+          }
+          return false;
+        }
+        console.error = function(...args) {
+          if (isBenignErrorLog(args)) {
+            console.debug(...args);
+            return;
+          }
+          origError.apply(console, args);
+        };
+        console.warn = function(...args) {
+          if (isBenignErrorLog(args)) {
+            console.debug(...args);
+            return;
+          }
+          origWarn.apply(console, args);
+        };
+        window.addEventListener('unhandledrejection', function(event) {
+          const reason = event && event.reason;
+          const msg = typeof reason === 'string' ? reason : (reason && reason.message) || '';
+          if (
+            msg.includes('WebSocket') ||
+            msg.includes('websocket') ||
+            msg.includes('[vite]') ||
+            msg.includes('Could not establish connection') ||
+            msg.includes('Receiving end does not exist') ||
+            msg.includes('serviceName') ||
+            msg.includes('chrome-extension://')
+          ) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        });
+        window.addEventListener('error', function(event) {
+          const msg = event && event.message ? String(event.message) : '';
+          const filename = event && event.filename ? String(event.filename) : '';
+          if (
+            msg.includes('serviceName') ||
+            msg.includes('Could not establish connection') ||
+            filename.includes('content.js') ||
+            filename.includes('chrome-extension://')
+          ) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        });
+      })();
+    </script>
+    <title>RMT Master System | مؤسسة صناع الموارد التجارية</title>
+    <meta name="description" content="البوابة الرسمية المعتمدة - مؤسسة صناع الموارد التجارية - منصة إدارة المشاريع والعمليات" />
+    <meta property="og:site_name" content="RMT Master System" />
+    <meta property="og:title" content="RMT Master System | منصة إدارة المشاريع والعمليات" />
+    <meta property="og:description" content="البوابة الرسمية المعتمدة - مؤسسة صناع الموارد التجارية" />
+    <meta property="og:image" content="/images/company-logo.svg" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:title" content="RMT Master System | مؤسسة صناع الموارد التجارية" />
+    <meta name="twitter:description" content="البوابة الرسمية المعتمدة - مؤسسة صناع الموارد التجارية" />
+    <meta name="twitter:image" content="/images/company-logo.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#174A84" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="RMT Master System" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="/images/company-logo.svg" />
+    <link rel="apple-touch-icon" href="/images/company-logo.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=Almarai:wght@400;700;800&family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-slate-50 text-slate-900 font-sans antialiased selection:bg-emerald-500 selection:text-white">
+    <div id="root">
+      <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #070d19; color: #ffffff; font-family: 'Cairo', system-ui, -apple-system, sans-serif; padding: 24px; text-align: center; box-sizing: border-box;">
+        <!-- Official RMT Logo -->
+        <div style="width: 84px; height: 84px; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 12px; box-shadow: 0 20px 40px -15px rgba(0, 168, 89, 0.25);">
+          <svg viewBox="0 0 160 120" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="rmt-r-grad-splash" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#00A859" />
+                <stop offset="50%" stop-color="#059669" />
+                <stop offset="100%" stop-color="#0D9488" />
+              </linearGradient>
+              <linearGradient id="rmt-bridge-grad-splash" x1="0%" y1="100%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#0D9488" />
+                <stop offset="50%" stop-color="#1E5AA0" />
+                <stop offset="100%" stop-color="#174A84" />
+              </linearGradient>
+            </defs>
+            <path d="M 16 14 L 32 14 L 32 106 L 16 106 Z" fill="#00A859" />
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M 32 14 L 70 14 C 82 14 88 20 88 34 C 88 48 82 54 70 54 L 32 54 Z M 32 26 L 66 26 C 72 26 74 28 74 34 C 74 40 72 42 66 42 L 32 42 Z" fill="#00A859" />
+            <path d="M 44 54 L 62 54 L 84 106 L 66 106 Z" fill="url(#rmt-r-grad-splash)" />
+            <path d="M 66 106 L 84 106 L 106 34 L 88 34 Z" fill="url(#rmt-bridge-grad-splash)" />
+            <path d="M 102 34 L 116 78 L 130 34 L 146 34 L 146 106 L 132 106 L 132 60 L 122 94 L 110 94 L 100 60 L 100 106 L 86 106 L 86 34 Z" fill="#174A84" />
+          </svg>
+        </div>
+
+        <!-- System Title -->
+        <h1 style="font-size: 22px; font-weight: 900; letter-spacing: -0.5px; margin: 0 0 6px 0; color: #ffffff; font-family: 'Plus Jakarta Sans', sans-serif;">
+          RMT Master System
+        </h1>
+
+        <!-- Arabic Subtitle -->
+        <p style="font-size: 13px; color: #94a3b8; margin: 0 0 24px 0; direction: rtl; font-weight: 600;">
+          مؤسسة صناع الموارد التجارية - جاري تشغيل وبناء المنظومة...
+        </p>
+
+        <!-- Modern Corporate Progress Bar -->
+        <div style="width: 240px; height: 4px; background: rgba(255, 255, 255, 0.08); border-radius: 9999px; overflow: hidden; position: relative; margin-bottom: 24px;">
+          <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 40%; background: linear-gradient(90deg, #00A859, #174A84); border-radius: 9999px; animation: rmtProgress 1.4s ease-in-out infinite;"></div>
+        </div>
+
+        <!-- Emergency Storage Reset / Refresh -->
+        <button onclick="localStorage.clear();sessionStorage.clear();if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));}window.location.reload();" style="background: rgba(30, 41, 59, 0.6); color: #38bdf8; border: 1px solid rgba(51, 65, 85, 0.8); padding: 6px 14px; border-radius: 8px; font-size: 11px; cursor: pointer; font-family: inherit; transition: all 0.2s ease;">
+          🔄 إعادة تعيين الذاكرة وتحديث الصفحة
+        </button>
+      </div>
+      <style>
+        @keyframes rmtProgress {
+          0% { left: -40%; width: 30%; }
+          50% { left: 35%; width: 50%; }
+          100% { left: 100%; width: 30%; }
+        }
+      </style>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

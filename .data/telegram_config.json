@@ -1,0 +1,10 @@
+{
+  "botToken": "",
+  "botUsername": "RMT_Enterprise_Bot",
+  "webhookUrl": "",
+  "isPollingActive": false,
+  "isWebhookActive": false,
+  "authorizedChatIds": [],
+  "executivePasscode": "RMT@2026",
+  "status": "disconnected"
+}

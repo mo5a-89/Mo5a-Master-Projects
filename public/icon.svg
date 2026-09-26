@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B1528" />
+      <stop offset="100%" stop-color="#060D1A" />
+    </linearGradient>
+    <linearGradient id="rmt-r-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00A859" />
+      <stop offset="50%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#0D9488" />
+    </linearGradient>
+    <linearGradient id="rmt-bridge-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0D9488" />
+      <stop offset="50%" stop-color="#1E5AA0" />
+      <stop offset="100%" stop-color="#174A84" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.4" />
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="110" fill="url(#bg-grad)" />
+  <rect width="508" height="508" x="2" y="2" rx="108" fill="none" stroke="#00A859" stroke-width="2" stroke-opacity="0.3" />
+
+  <g transform="translate(85, 115) scale(2.2)" filter="url(#shadow)">
+    <path d="M 16 14 L 32 14 L 32 106 L 16 106 Z" fill="#00A859" />
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M 32 14 L 70 14 C 82 14 88 20 88 34 C 88 48 82 54 70 54 L 32 54 Z M 32 26 L 66 26 C 72 26 74 28 74 34 C 74 40 72 42 66 42 L 32 42 Z" fill="#00A859" />
+    <path d="M 44 54 L 62 54 L 84 106 L 66 106 Z" fill="url(#rmt-r-grad)" />
+    <path d="M 66 106 L 84 106 L 106 34 L 88 34 Z" fill="url(#rmt-bridge-grad)" />
+    <path d="M 102 34 L 116 78 L 130 34 L 146 34 L 146 106 L 132 106 L 132 60 L 122 94 L 110 94 L 100 60 L 100 106 L 86 106 L 86 34 Z" fill="#38BDF8" />
+  </g>
+</svg>

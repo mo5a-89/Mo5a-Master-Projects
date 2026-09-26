@@ -1,0 +1,8 @@
+{
+  "name": "Remix Master Projects Tracking System - M5 BOT",
+  "description": "An integrated platform for streamlined project management, automated quotation processing, cost estimation, and real-time profitability analysis for MEP contractors.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

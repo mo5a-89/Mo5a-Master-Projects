@@ -1,0 +1,56 @@
+import { User } from '../types';
+
+// SHA-256 (password + "RMT_ENTERPRISE_SECRET_SALT_2026")
+// Hash for "Admin@123": 6d11a613c7164adc8abaa7057965c72727646bef6201c105ce30d3a3f41014ea
+
+export const INITIAL_USERS: User[] = [
+  {
+    id: 'usr-master-mokhtar',
+    username: 'mokhtar.creator',
+    email: 'Mok7tar.89@gmail.com',
+    fullName: 'مختار أبورزق (Master Creator)',
+    name: 'مختار أبورزق (Master Creator)',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    role: 'admin',
+    department: 'System Architecture & Executive Ownership / التطوير والملكية العامة',
+    jobTitle: 'Master Creator & Executive Owner',
+    phone: '+966 599787793',
+    isActive: true,
+    isMasterAdmin: true,
+    masterRoleTitle: 'Master Creator',
+    canDeleteAdmins: true,
+    createdAt: '2026-01-01T08:00:00.000Z',
+    lastLogin: '2026-09-24T21:30:00.000Z',
+    lastLoginAt: '2026-09-24T21:30:00.000Z',
+    passwordHash: '6d11a613c7164adc8abaa7057965c72727646bef6201c105ce30d3a3f41014ea',
+    permissions: {
+      canAccessAdminPanel: true,
+      canManageUsers: true,
+      canEditFinancialMargins: true,
+      canCreateProject: true,
+      canDeleteProject: true,
+      canManageQuotations: true,
+      canUploadQuotations: true,
+      canIssueInvoices: true,
+      canManageProcurement: true,
+      canApprovePO: true,
+      canUpdateFieldExecution: true,
+      canExportData: true,
+      canDeleteAdmins: true,
+    },
+    systemPermissions: [
+      'ESTIMATING_VIEW',
+      'ESTIMATING_EDIT_RATES',
+      'ESTIMATING_PROMOTE',
+      'PROCUREMENT_VIEW',
+      'PROCUREMENT_CREATE_PO',
+      'PROCUREMENT_APPROVE_PO',
+      'FINANCE_VIEW_PROFIT_MARGINS',
+      'FINANCE_ISSUE_INVOICE',
+      'FINANCE_AUDIT_APPROVE',
+      'SYSTEM_ADMIN_USERS',
+      'SYSTEM_CONFIG_SETTINGS',
+      'SYSTEM_AUDIT_PURGE',
+    ],
+  },
+];
