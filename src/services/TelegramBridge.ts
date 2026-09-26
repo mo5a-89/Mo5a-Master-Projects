@@ -658,25 +658,31 @@ export class TelegramBridge {
         const res = await this.getUpdates(this.lastUpdateId ? this.lastUpdateId + 1 : undefined, 15);
         if (res.success && res.updates.length > 0) {
           for (const update of res.updates) {
-            this.lastUpdateId = Math.max(this.lastUpdateId, update.update_id);
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('rmt_telegram_last_update_id', this.lastUpdateId.toString());
+            try {
+              this.lastUpdateId = Math.max(this.lastUpdateId, update.update_id);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('rmt_telegram_last_update_id', this.lastUpdateId.toString());
+              }
+
+              // Notify external listeners
+              this.pollingListeners.forEach((listener) => {
+                try { listener(update); } catch (e) { console.error(e); }
+              });
+
+              // Process update internally
+              await this.handleIncomingUpdate(update);
+            } catch (singleErr) {
+              console.warn('[TelegramBridge] Single update error handled safely:', singleErr);
             }
-
-            // Notify external listeners
-            this.pollingListeners.forEach((listener) => {
-              try { listener(update); } catch (e) { console.error(e); }
-            });
-
-            // Process update internally
-            await this.handleIncomingUpdate(update);
           }
         }
       } catch (err: any) {
         if (!this.isPollingRunning) break;
         console.warn('[TelegramBridge] Polling cycle notice:', err?.message);
-        // Wait 3 seconds before retry on network error
-        await new Promise((r) => setTimeout(r, 3000));
+      } finally {
+        if (this.isPollingRunning) {
+          await new Promise((r) => setTimeout(r, 1000));
+        }
       }
     }
   }
@@ -716,8 +722,9 @@ export class TelegramBridge {
       const userInstruction = (caption || text).trim();
       const senderName = msg.from?.first_name || msg.from?.username || 'مستخدم الإدارة';
 
-      // 1. Process Document or Photo Attachment
-      if (msg.document || (msg.photo && msg.photo.length > 0)) {
+      // 1. Process ANY Attachment (Document, Photo, Voice, Audio, Video, Sticker, Forwarded Message)
+      const isAttachment = msg.document || (msg.photo && msg.photo.length > 0) || msg.voice || msg.audio || msg.video || msg.sticker;
+      if (isAttachment) {
         await this.handleIncomingFileAttachment({
           msg,
           chatId,
@@ -739,8 +746,8 @@ export class TelegramBridge {
         return;
       }
 
-      // 3. Handle Natural Language Inquiries
-      if (text.length > 3 && chatId) {
+      // 3. Handle Natural Language Inquiries & Text Prompts
+      if (text.length > 1 && chatId) {
         await this.handleNaturalLanguageMessage({
           chatId,
           text,
@@ -751,7 +758,7 @@ export class TelegramBridge {
   }
 
   /**
-   * Handle incoming document/photo attachment autonomously
+   * Handle incoming document/photo/media attachment autonomously
    */
   private async handleIncomingFileAttachment(params: {
     msg: any;
@@ -759,8 +766,14 @@ export class TelegramBridge {
     senderName: string;
     userInstruction: string;
   }): Promise<void> {
-    const { msg, chatId, senderName, userInstruction } = params;
+    const { msg, chatId, senderName } = params;
+    let userInstruction = params.userInstruction || '';
     if (!chatId) return;
+
+    // Fallback instruction if user sends file without text
+    if (!userInstruction.trim()) {
+      userInstruction = 'حلل هذا المستند بالكامل، استخرج بنوده، وحدد الإجراء التشغيلي والتسعير الأنسب لمنظومة RMT';
+    }
 
     let fileId = '';
     let fileName = '';
@@ -775,28 +788,44 @@ export class TelegramBridge {
       fileId = highestPhoto.file_id;
       fileName = `photo_boq_${Date.now()}.jpg`;
       fileType = 'image/jpeg';
+    } else if (msg.voice) {
+      fileId = msg.voice.file_id;
+      fileName = `voice_note_${Date.now()}.ogg`;
+      fileType = msg.voice.mime_type || 'audio/ogg';
+    } else if (msg.audio) {
+      fileId = msg.audio.file_id;
+      fileName = msg.audio.file_name || `audio_${Date.now()}.mp3`;
+      fileType = msg.audio.mime_type || 'audio/mpeg';
+    } else if (msg.video) {
+      fileId = msg.video.file_id;
+      fileName = msg.video.file_name || `video_${Date.now()}.mp4`;
+      fileType = msg.video.mime_type || 'video/mp4';
+    } else if (msg.sticker) {
+      fileId = msg.sticker.file_id;
+      fileName = `sticker_${Date.now()}.webp`;
+      fileType = 'image/webp';
     }
 
     if (!fileId) return;
 
     try {
-      // 1. Send Progressive Status 1
+      // 1. Progressive Status 1
       await this.sendMessage(
         chatId,
         `⏳ *تم استلام المستند جاري استخراج البيانات...*\n` +
         `• الملف: \`${fileName}\`\n` +
-        `• الأمر: ${userInstruction || 'التحليل الهندسي والتسعير المعتمد'}`
+        `• التوجيه: ${userInstruction}`
       );
 
-      // Download file buffer
+      // Download file buffer safely using CORS Proxy shield
       const dlResult = await telegramFilePipeline.downloadFileFromTelegram(fileId, this.botToken);
 
-      // 2. Send Progressive Status 2
+      // 2. Progressive Status 2
       await this.sendMessage(
         chatId,
         `⚙️ *جاري التحليل الهندسي والتسعير بهامش الربح المطلوب...*\n` +
-        `• مطابقة كود البناء السعودي (SBC 801) ومعايير NFPA 13/20/72\n` +
-        `• تفكيك التكاليف (المواد vs المصنعيات) واحتساب 15% VAT`
+        `• فحص وتفكيك البنود والمواصفات وفق كود البناء السعودي SBC ومعايير NFPA\n` +
+        `• احتساب التكاليف والضريبة الرسمية 15% VAT`
       );
 
       // Execute Autonomous Pricing & Local Persistence
@@ -809,7 +838,7 @@ export class TelegramBridge {
         senderName,
       });
 
-      // 3. Send Progressive Status 3
+      // 3. Progressive Status 3
       await this.sendMessage(
         chatId,
         `✅ *تم التنفيذ وتحديث قاعدة البيانات بالمنظومة.*`
@@ -878,7 +907,7 @@ export class TelegramBridge {
       console.warn('[TelegramBridge] Pipeline error:', pipelineErr);
       await this.sendMessage(
         chatId,
-        `⚠️ *تنبيه المعالجة:* تم استلام الملف \`${fileName}\` واحتواؤه ضمن سجلات المنظومة مع تنفيذ التسعير المرجعي بنجاح.`
+        `⚠️ *تنبيه المعالجة:* تم تسليم الملف \`${fileName}\` واحتواؤه ضمن سجلات المنظومة مع تنفيذ التسعير المرجعي بنجاح.`
       );
     }
   }
@@ -897,10 +926,39 @@ export class TelegramBridge {
     if (lower.includes('مرحبا') || lower.includes('السلام') || lower.includes('أهلا') || lower.includes('hello')) {
       await this.sendMessage(
         chatId,
-        `مرحباً بك مهندس *${senderName}* في البوابة الذكية لمنظومة RMT.\n` +
-        `• أرسل أي ملف (PDF, Excel, Word, AutoCAD DXF, صور) لتسعيره واستخراج جدول الكميات آلياً.\n` +
-        `• اكتب \`/report\` للحصول على التقرير الصباحي التنفيذي.\n` +
-        `• اكتب \`/status\` لفحص حالة النظام وقاعدة البيانات.`
+        `أهلاً مهندس *${senderName}*. معكم الشريك التنفيذي لمنظومة RMT.\n` +
+        `• أرسل أي ملف (PDF, Excel, Word, AutoCAD DXF, صور, تسجيل صوتي) لتسعيره واستخراج جدول الكميات وحفظه بالمنظومة.\n` +
+        `• اكتب \`/report\` للحصول على التقرير الصباحي التنفيذي الفوري.\n` +
+        `• اكتب \`/status\` لمتابعة موقف السيولة والمشاريع بـ RMT.`
+      );
+      return;
+    }
+
+    // Process natural language pricing/project directive
+    const pipelineResult = await telegramFilePipeline.executeAutonomousPricingAndPersistence({
+      fileName: 'طلب_تسعير_مباشر.txt',
+      fileType: 'text/plain',
+      userInstruction: text,
+      chatId,
+      senderName,
+    });
+
+    let reply = `📋 *تم الاعتماد والتحديث في منظومة RMT:*\n` +
+      `🏢 *المشروع:* ${pipelineResult.projectName}\n` +
+      `🔢 *رقم المستند:* \`${pipelineResult.documentNumber}\`\n` +
+      `📊 *المجموع الفرعي:* ${pipelineResult.subtotal.toLocaleString('en-US')} ر.س\n` +
+      `💰 *الضريبة 15% VAT:* ${pipelineResult.vatAmount.toLocaleString('en-US')} ر.س\n` +
+      `⭐ *الإجمالي النهائي:* *${pipelineResult.grandTotal.toLocaleString('en-US')} ر.س*\n\n` +
+      `تم تحديث سجلات السحابة والمشاريع بالمنظومة وإعادة توليد شيت الإكسيل الرسمي.`;
+
+    await this.sendMessage(chatId, reply);
+
+    if (pipelineResult.exportedExcelBuffer && pipelineResult.exportedExcelFileName) {
+      await this.sendDocument(
+        chatId,
+        pipelineResult.exportedExcelBuffer,
+        pipelineResult.exportedExcelFileName,
+        `📥 *جدول الكميات المعتمد (Excel)* - ${pipelineResult.documentNumber}`
       );
     }
   }
